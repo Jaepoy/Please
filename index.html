@@ -48,7 +48,7 @@
 
 <script>
 const { useState, useEffect, useCallback } = React;
-const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
 /* ---------------------------------------------------------
    Design tokens — bold, playful, adventurous
@@ -231,10 +231,10 @@ function AuthScreen() {
     setError(""); setNotice(""); setBusy(true);
     try {
       if (mode === "signin") {
-        const r = await supabase.auth.signInWithPassword({ email, password });
+        const r = await sb.auth.signInWithPassword({ email, password });
         if (r.error) throw r.error;
       } else {
-        const r = await supabase.auth.signUp({ email, password });
+        const r = await sb.auth.signUp({ email, password });
         if (r.error) throw r.error;
         setNotice("Account created! Check your email to confirm, then sign in.");
         setMode("signin");
@@ -361,9 +361,9 @@ function BottomNav(props) {
    Encrypted data layer
 --------------------------------------------------------- */
 async function fetchAllEncrypted(userId, key) {
-  const settingsRes = await supabase.from("settings_enc").select("*").eq("user_id", userId).maybeSingle();
-  const doseRes = await supabase.from("doses_enc").select("*").eq("user_id", userId).order("created_at", { ascending: false });
-  const encRes = await supabase.from("encounters_enc").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+  const settingsRes = await sb.from("settings_enc").select("*").eq("user_id", userId).maybeSingle();
+  const doseRes = await sb.from("doses_enc").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+  const encRes = await sb.from("encounters_enc").select("*").eq("user_id", userId).order("created_at", { ascending: false });
   const settings = settingsRes.data ? await decryptJSON(key, settingsRes.data.ct, settingsRes.data.iv) : { prepMode: "daily", pinEnabled: false, pin: "", lastLabDate: null };
   const doses = await Promise.all((doseRes.data || []).map(async function (r) { const d = await decryptJSON(key, r.ct, r.iv); return Object.assign({ id: r.id }, d); }));
   const encounters = await Promise.all((encRes.data || []).map(async function (r) { const d = await decryptJSON(key, r.ct, r.iv); return Object.assign({ id: r.id }, d); }));
@@ -398,14 +398,14 @@ function Dashboard(props) {
   const persistSettings = useCallback(async function (next) {
     setSettings(next);
     const enc2 = await encryptJSON(vaultKey, next);
-    await supabase.from("settings_enc").upsert({ user_id: userId, ct: enc2.ct, iv: enc2.iv, updated_at: new Date().toISOString() });
+    await sb.from("settings_enc").upsert({ user_id: userId, ct: enc2.ct, iv: enc2.iv, updated_at: new Date().toISOString() });
   }, [userId, vaultKey]);
 
   const addDose = useCallback(async function (dose) {
     const optimistic = Object.assign({}, dose, { id: "temp-" + Date.now() });
     setDoses(function (d) { return [optimistic].concat(d); });
     const enc2 = await encryptJSON(vaultKey, dose);
-    const r = await supabase.from("doses_enc").insert({ user_id: userId, ct: enc2.ct, iv: enc2.iv }).select().single();
+    const r = await sb.from("doses_enc").insert({ user_id: userId, ct: enc2.ct, iv: enc2.iv }).select().single();
     if (r.data) setDoses(function (d) { return d.map(function (x) { return x.id === optimistic.id ? Object.assign({}, dose, { id: r.data.id }) : x; }); });
   }, [userId, vaultKey]);
 
@@ -413,13 +413,13 @@ function Dashboard(props) {
     const optimistic = Object.assign({}, entry, { id: "temp-" + Date.now() });
     setEncounters(function (e) { return [optimistic].concat(e); });
     const enc2 = await encryptJSON(vaultKey, entry);
-    const r = await supabase.from("encounters_enc").insert({ user_id: userId, ct: enc2.ct, iv: enc2.iv }).select().single();
+    const r = await sb.from("encounters_enc").insert({ user_id: userId, ct: enc2.ct, iv: enc2.iv }).select().single();
     if (r.data) setEncounters(function (e) { return e.map(function (x) { return x.id === optimistic.id ? Object.assign({}, entry, { id: r.data.id }) : x; }); });
   }, [userId, vaultKey]);
 
   const removeEncounter = useCallback(async function (id) {
     setEncounters(function (e) { return e.filter(function (x) { return x.id !== id; }); });
-    if (String(id).indexOf("temp-") !== 0) await supabase.from("encounters_enc").delete().eq("id", id);
+    if (String(id).indexOf("temp-") !== 0) await sb.from("encounters_enc").delete().eq("id", id);
   }, []);
 
   if (loading) return React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: C.cream, fontFamily: FONT_BODY } }, React.createElement("div", { style: { color: C.slate, fontSize: 14, fontWeight: 600 } }, "Decrypting…"));
@@ -597,15 +597,15 @@ function App() {
   const [vaultBusy, setVaultBusy] = useState(false);
 
   useEffect(function () {
-    supabase.auth.getSession().then(function (r) { setSession(r.data.session); });
-    const sub = supabase.auth.onAuthStateChange(function (_e, sess) { setSession(sess); setVaultKey(null); setVaultStage("checking"); });
+    sb.auth.getSession().then(function (r) { setSession(r.data.session); });
+    const sub = sb.auth.onAuthStateChange(function (_e, sess) { setSession(sess); setVaultKey(null); setVaultStage("checking"); });
     return function () { sub.data.subscription.unsubscribe(); };
   }, []);
 
   useEffect(function () {
     if (!session) return;
     (async function () {
-      const r = await supabase.from("key_material").select("*").eq("user_id", session.user.id).maybeSingle();
+      const r = await sb.from("key_material").select("*").eq("user_id", session.user.id).maybeSingle();
       setVaultStage(r.data ? "unlock" : "setup");
     })();
   }, [session]);
@@ -615,7 +615,7 @@ function App() {
     const saltB64 = bufToB64(salt);
     const key = await deriveKey(passphrase, saltB64);
     const check = await encryptJSON(key, { ok: true });
-    const r = await supabase.from("key_material").insert({ user_id: session.user.id, salt: saltB64, check_ct: check.ct, check_iv: check.iv });
+    const r = await sb.from("key_material").insert({ user_id: session.user.id, salt: saltB64, check_ct: check.ct, check_iv: check.iv });
     if (r.error) throw r.error;
     setVaultKey(key); setVaultStage("ready");
   };
@@ -623,7 +623,7 @@ function App() {
   const unlockVault = async function (passphrase) {
     setVaultBusy(true); setVaultError("");
     try {
-      const r = await supabase.from("key_material").select("*").eq("user_id", session.user.id).maybeSingle();
+      const r = await sb.from("key_material").select("*").eq("user_id", session.user.id).maybeSingle();
       const key = await deriveKey(passphrase, r.data.salt);
       const check = await decryptJSON(key, r.data.check_ct, r.data.check_iv);
       if (check && check.ok) { setVaultKey(key); setVaultStage("ready"); } else setVaultError("bad");
@@ -634,7 +634,7 @@ function App() {
   if (!session) return React.createElement(AuthScreen, null);
   if (vaultStage === "setup") return React.createElement(VaultSetupScreen, { onCreated: createVault });
   if (vaultStage === "unlock") return React.createElement(VaultUnlockScreen, { onUnlock: unlockVault, error: vaultError, busy: vaultBusy });
-  return React.createElement(Dashboard, { userId: session.user.id, vaultKey: vaultKey, onSignOut: function () { supabase.auth.signOut(); } });
+  return React.createElement(Dashboard, { userId: session.user.id, vaultKey: vaultKey, onSignOut: function () { sb.auth.signOut(); } });
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App, null));
