@@ -20,7 +20,7 @@
 
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
-  html, body { -webkit-text-size-adjust: 100%; overscroll-behavior-y: none; margin: 0; background:#1E1033; }
+  html, body { -webkit-text-size-adjust: 100%; overscroll-behavior-y: none; margin: 0; background:#140C1D; }
   input[type="datetime-local"]::-webkit-calendar-picker-indicator { opacity: 0.7; }
   * { box-sizing: border-box; }
   button { cursor: pointer; font-family: inherit; }
@@ -63,19 +63,28 @@ const C = {
   cream: "#FFF7ED", card: "#FFFFFF",
   slate: "#5C5470", slateLight: "#9891AC", border: "#EDE4D6",
   sun: "#FFD23F", blush: "#FFDCEA", lilac: "#E6D9FF",
+  /* Premium dark/gold jewel-tone palette — used for the app shell and the
+     sign-in / vault screens, echoing the charcoal-and-gold reference mark. */
+  charcoal: "#140C1D", charcoalDeep: "#0D0813", charcoalSoft: "#241833",
+  navy: "#16213E", navyDeep: "#0E1730", plumDeep: "#3B1E63",
+  gold: "#C9A24B", goldLight: "#F4D785", goldDeep: "#8C6C24",
 };
-/* Small confetti of pill/capsule shapes — a nod to the loose pills and
-   contraceptives in the reference photo — used to warm up the entry
-   screens (sign in, vault setup/unlock) instead of a flat dark gradient. */
+/* Small confetti of gold/jewel-tone marks — a bolder, more premium nod to
+   the gender-symbol motif in the reference mark — used on the entry
+   screens (sign in, vault setup/unlock) instead of a flat gradient. */
 function PillConfetti() {
   const pills = [
-    { bg: C.coral, rot: -18 }, { bg: C.violet, rot: 10 }, { bg: C.mint, rot: -6 }, { bg: C.amber, rot: 20 },
+    { bg: "linear-gradient(135deg," + C.goldLight + "," + C.gold + ")", rot: -18 },
+    { bg: "linear-gradient(135deg," + C.violet + "," + C.plumDeep + ")", rot: 10 },
+    { bg: "linear-gradient(135deg," + C.goldLight + "," + C.gold + ")", rot: -6 },
+    { bg: "linear-gradient(135deg," + C.navy + "," + C.navyDeep + ")", rot: 20 },
   ];
   return React.createElement("div", { style: { display: "flex", justifyContent: "center", gap: 10, marginBottom: 18 } },
     pills.map(function (p, i) {
       return React.createElement("div", { key: i, style: {
         width: 30, height: 14, borderRadius: 999, background: p.bg,
-        border: "2px solid " + C.ink, transform: "rotate(" + p.rot + "deg)",
+        border: "1.5px solid " + C.goldDeep, transform: "rotate(" + p.rot + "deg)",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
       } });
     }));
 }
@@ -259,12 +268,12 @@ function AuthScreen() {
     finally { setBusy(false); }
   };
 
-  return React.createElement("div", { style: { minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 24px", background: "linear-gradient(165deg, " + C.sun + " 0%, " + C.blush + " 45%, " + C.cream + " 100%)", fontFamily: FONT_BODY } },
+  return React.createElement("div", { style: { minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 24px", background: "linear-gradient(150deg, " + C.charcoal + " 0%, " + C.plumDeep + " 55%, " + C.navyDeep + " 100%)", fontFamily: FONT_BODY } },
     React.createElement("div", { style: { width: "100%", maxWidth: MAX_W } },
       React.createElement("div", { style: { textAlign: "center", marginBottom: 24 } },
-        React.createElement("img", { src: "icon-192.png", alt: "AuraShield", style: { width: 76, height: 76, borderRadius: 22, margin: "0 auto 16px", display: "block", border: "3px solid " + C.ink, boxShadow: "4px 4px 0px " + C.ink } }),
-        React.createElement("div", { style: { fontFamily: FONT_DISPLAY, color: C.ink, fontSize: 30, fontWeight: 700 } }, "AuraShield"),
-        React.createElement("div", { style: { fontSize: 14, color: C.slate, marginTop: 8, fontWeight: 600 } }, mode === "signin" ? "Welcome back — let's go" : "Let's set up your private space")),
+        React.createElement("img", { src: "icon-192.png", alt: "AuraShield", style: { width: 76, height: 76, borderRadius: 22, margin: "0 auto 16px", display: "block", border: "3px solid " + C.gold, boxShadow: "0 6px 20px rgba(0,0,0,0.5)" } }),
+        React.createElement("div", { style: { fontFamily: FONT_DISPLAY, color: "#fff", fontSize: 30, fontWeight: 700, letterSpacing: 0.5 } }, "AuraShield"),
+        React.createElement("div", { style: { fontSize: 14, color: C.goldLight, marginTop: 8, fontWeight: 600 } }, mode === "signin" ? "Welcome back — let's go" : "Let's set up your private space")),
       React.createElement(PillConfetti, null),
       React.createElement(Card, { style: { padding: 22 } },
         React.createElement("div", { style: { fontSize: 12, fontWeight: 800, color: C.slate, marginBottom: 6 } }, "EMAIL"),
@@ -274,7 +283,7 @@ function AuthScreen() {
         React.createElement(PassInput, { value: password, onChange: function (e) { setPassword(e.target.value); }, placeholder: "At least 6 characters" }),
         error && React.createElement("div", { style: { fontSize: 13, color: C.coralDeep, marginBottom: 12, fontWeight: 700 } }, error),
         notice && React.createElement("div", { style: { fontSize: 13, color: "#00875F", marginBottom: 12, fontWeight: 700 } }, notice),
-        React.createElement(PrimaryButton, { onClick: submit, disabled: busy || !email || password.length < 6, style: { background: C.coral, border: "2.5px solid " + C.ink, marginTop: 4 } },
+        React.createElement(PrimaryButton, { onClick: submit, disabled: busy || !email || password.length < 6, style: { background: "linear-gradient(135deg," + C.goldLight + "," + C.gold + ")", color: C.charcoalDeep, border: "2.5px solid " + C.goldDeep, marginTop: 4, boxShadow: "0 4px 14px rgba(201,162,75,0.35)" } },
           busy ? "One sec…" : mode === "signin" ? "Sign in" : "Create account"),
         React.createElement("button", { onClick: function () { setMode(mode === "signin" ? "signup" : "signin"); setError(""); setNotice(""); }, style: { width: "100%", textAlign: "center", fontSize: 13, color: C.violetDeep, marginTop: 16, background: "none", border: "none", fontWeight: 700 } },
           mode === "signin" ? "New here? Create an account" : "Already have an account? Sign in"))));
@@ -295,13 +304,13 @@ function VaultSetupScreen(props) {
     try { await props.onCreated(p1); }
     catch (e) { setError(e.message || "Couldn't set up your vault."); setBusy(false); }
   };
-  return React.createElement("div", { style: { minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 24px", background: "linear-gradient(165deg, " + C.lilac + " 0%, " + C.blush + " 55%, " + C.cream + " 100%)", fontFamily: FONT_BODY } },
+  return React.createElement("div", { style: { minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 24px", background: "linear-gradient(150deg, " + C.charcoal + " 0%, " + C.plumDeep + " 55%, " + C.navyDeep + " 100%)", fontFamily: FONT_BODY } },
     React.createElement("div", { style: { width: "100%", maxWidth: MAX_W } },
       React.createElement("div", { style: { textAlign: "center", marginBottom: 20 } },
-        React.createElement("div", { style: { width: 64, height: 64, borderRadius: 18, background: C.coral, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", border: "2.5px solid " + C.ink, boxShadow: "4px 4px 0px " + C.ink } },
-          React.createElement(Icon, { name: "key", size: 28, color: "#fff" })),
-        React.createElement("div", { style: { fontFamily: FONT_DISPLAY, color: C.ink, fontSize: 24, fontWeight: 700 } }, "Lock it down"),
-        React.createElement("div", { style: { fontSize: 14, color: C.slate, marginTop: 10, lineHeight: 1.5, padding: "0 4px", fontWeight: 500 } }, "This passphrase is different from your login. It encrypts everything right here on your device — nobody else, not even the person who built this app, can read your data without it.")),
+        React.createElement("div", { style: { width: 64, height: 64, borderRadius: 18, background: "linear-gradient(135deg," + C.goldLight + "," + C.gold + ")", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", border: "2.5px solid " + C.goldDeep, boxShadow: "0 6px 18px rgba(0,0,0,0.45)" } },
+          React.createElement(Icon, { name: "key", size: 28, color: C.charcoalDeep })),
+        React.createElement("div", { style: { fontFamily: FONT_DISPLAY, color: "#fff", fontSize: 24, fontWeight: 700 } }, "Lock it down"),
+        React.createElement("div", { style: { fontSize: 14, color: C.goldLight, marginTop: 10, lineHeight: 1.5, padding: "0 4px", fontWeight: 500 } }, "This passphrase is different from your login. It encrypts everything right here on your device — nobody else, not even the person who built this app, can read your data without it.")),
       React.createElement(Card, { style: { padding: 22 } },
         React.createElement("div", { style: { fontSize: 12, fontWeight: 800, color: C.slate, marginBottom: 6 } }, "VAULT PASSPHRASE (8+ CHARS)"),
         React.createElement(PassInput, { value: p1, onChange: function (e) { setP1(e.target.value); }, placeholder: "Something only you know" }),
@@ -311,21 +320,21 @@ function VaultSetupScreen(props) {
           React.createElement("span", { style: { width: 22, height: 22, minWidth: 22, borderRadius: 6, background: ack ? C.mint : "#fff", border: "2px solid " + (ack ? C.mint : C.border), display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1 } }, ack && React.createElement(Icon, { name: "check", size: 13, color: "#fff" })),
           React.createElement("span", { style: { fontSize: 12, color: C.slate, lineHeight: 1.5, fontWeight: 500 } }, "I understand there's no reset for this. If I forget it, my data is gone for good.")),
         error && React.createElement("div", { style: { fontSize: 13, color: C.coralDeep, marginBottom: 12, fontWeight: 700 } }, error),
-        React.createElement(PrimaryButton, { onClick: submit, disabled: !canSubmit, style: { background: C.mint, border: "2.5px solid " + C.ink } }, busy ? "Setting up…" : "Create my vault"))));
+        React.createElement(PrimaryButton, { onClick: submit, disabled: !canSubmit, style: { background: "linear-gradient(135deg," + C.goldLight + "," + C.gold + ")", color: C.charcoalDeep, border: "2.5px solid " + C.goldDeep, boxShadow: "0 4px 14px rgba(201,162,75,0.35)" } }, busy ? "Setting up…" : "Create my vault"))));
 }
 function VaultUnlockScreen(props) {
   const [p, setP] = useState("");
-  return React.createElement("div", { style: { minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 24px", background: "linear-gradient(165deg, " + C.lilac + " 0%, " + C.blush + " 55%, " + C.cream + " 100%)", fontFamily: FONT_BODY } },
+  return React.createElement("div", { style: { minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 24px", background: "linear-gradient(150deg, " + C.charcoal + " 0%, " + C.plumDeep + " 55%, " + C.navyDeep + " 100%)", fontFamily: FONT_BODY } },
     React.createElement("div", { style: { width: "100%", maxWidth: MAX_W } },
       React.createElement("div", { style: { textAlign: "center", marginBottom: 24 } },
-        React.createElement("div", { style: { width: 64, height: 64, borderRadius: 18, background: C.violet, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", border: "2.5px solid " + C.ink, boxShadow: "4px 4px 0px " + C.ink } },
-          React.createElement(Icon, { name: "key", size: 28, color: "#fff" })),
-        React.createElement("div", { style: { fontFamily: FONT_DISPLAY, color: C.ink, fontSize: 24, fontWeight: 700 } }, "Welcome back"),
-        React.createElement("div", { style: { fontSize: 14, color: C.slate, marginTop: 8, fontWeight: 500 } }, "Enter your vault passphrase to decrypt on this device.")),
+        React.createElement("div", { style: { width: 64, height: 64, borderRadius: 18, background: "linear-gradient(135deg," + C.goldLight + "," + C.gold + ")", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", border: "2.5px solid " + C.goldDeep, boxShadow: "0 6px 18px rgba(0,0,0,0.45)" } },
+          React.createElement(Icon, { name: "key", size: 28, color: C.charcoalDeep })),
+        React.createElement("div", { style: { fontFamily: FONT_DISPLAY, color: "#fff", fontSize: 24, fontWeight: 700 } }, "Welcome back"),
+        React.createElement("div", { style: { fontSize: 14, color: C.goldLight, marginTop: 8, fontWeight: 500 } }, "Enter your vault passphrase to decrypt on this device.")),
       React.createElement(Card, { style: { padding: 22 } },
         React.createElement(PassInput, { value: p, onChange: function (e) { setP(e.target.value); }, placeholder: "Vault passphrase" }),
         props.error && React.createElement("div", { style: { fontSize: 13, color: C.coralDeep, marginBottom: 12, fontWeight: 700 } }, "Incorrect passphrase."),
-        React.createElement(PrimaryButton, { onClick: function () { props.onUnlock(p); }, disabled: !p || props.busy, style: { background: C.violet, border: "2.5px solid " + C.ink } }, props.busy ? "Unlocking…" : "Unlock"))));
+        React.createElement(PrimaryButton, { onClick: function () { props.onUnlock(p); }, disabled: !p || props.busy, style: { background: "linear-gradient(135deg," + C.goldLight + "," + C.gold + ")", color: C.charcoalDeep, border: "2.5px solid " + C.goldDeep, boxShadow: "0 4px 14px rgba(201,162,75,0.35)" } }, props.busy ? "Unlocking…" : "Unlock"))));
 }
 
 /* ---------------------------------------------------------
@@ -403,6 +412,7 @@ function Dashboard(props) {
   const [pinDraft, setPinDraft] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [tab, setTab] = useState("home");
+  const [syncError, setSyncError] = useState("");
 
   useEffect(function () {
     (async function () {
@@ -412,32 +422,78 @@ function Dashboard(props) {
     })();
   }, [userId]);
 
+  // Retries a Supabase write a few times (network hiccups, a token mid
+  // refresh, etc. are transient) before giving up, so a log doesn't
+  // silently fail to reach your account just because of a bad moment of
+  // connectivity — which is what used to make entries look saved in the
+  // app but then not actually be there next time you opened it.
+  const withRetry = useCallback(async function (op, attempts) {
+    const max = attempts || 3;
+    let last = null;
+    for (let i = 0; i < max; i++) {
+      last = await op();
+      if (!last.error) return last;
+      if (i < max - 1) await new Promise(function (res) { setTimeout(res, 600 * (i + 1)); });
+    }
+    return last;
+  }, []);
+
   const persistSettings = useCallback(async function (next) {
+    const prev = settings;
     setSettings(next);
     const enc2 = await encryptJSON(vaultKey, next);
-    await sb.from("settings_enc").upsert({ user_id: userId, ct: enc2.ct, iv: enc2.iv, updated_at: new Date().toISOString() });
-  }, [userId, vaultKey]);
+    const r = await withRetry(function () {
+      return sb.from("settings_enc").upsert({ user_id: userId, ct: enc2.ct, iv: enc2.iv, updated_at: new Date().toISOString() });
+    });
+    if (r.error) {
+      setSettings(prev);
+      setSyncError("Couldn't save that setting to your account — check your connection and try again.");
+    }
+  }, [userId, vaultKey, settings, withRetry]);
 
   const addDose = useCallback(async function (dose) {
     const optimistic = Object.assign({}, dose, { id: "temp-" + Date.now() });
     setDoses(function (d) { return [optimistic].concat(d); });
     const enc2 = await encryptJSON(vaultKey, dose);
-    const r = await sb.from("doses_enc").insert({ user_id: userId, ct: enc2.ct, iv: enc2.iv }).select().single();
-    if (r.data) setDoses(function (d) { return d.map(function (x) { return x.id === optimistic.id ? Object.assign({}, dose, { id: r.data.id }) : x; }); });
-  }, [userId, vaultKey]);
+    const r = await withRetry(function () {
+      return sb.from("doses_enc").insert({ user_id: userId, ct: enc2.ct, iv: enc2.iv }).select().single();
+    });
+    if (r.data) {
+      setDoses(function (d) { return d.map(function (x) { return x.id === optimistic.id ? Object.assign({}, dose, { id: r.data.id }) : x; }); });
+    } else {
+      // The write never actually reached your account — pulling the
+      // optimistic entry back out rather than leaving a dose logged on
+      // screen that isn't really saved anywhere.
+      setDoses(function (d) { return d.filter(function (x) { return x.id !== optimistic.id; }); });
+      setSyncError("That dose didn't save — check your connection and log it again.");
+    }
+  }, [userId, vaultKey, withRetry]);
 
   const addEncounter = useCallback(async function (entry) {
     const optimistic = Object.assign({}, entry, { id: "temp-" + Date.now() });
     setEncounters(function (e) { return [optimistic].concat(e); });
     const enc2 = await encryptJSON(vaultKey, entry);
-    const r = await sb.from("encounters_enc").insert({ user_id: userId, ct: enc2.ct, iv: enc2.iv }).select().single();
-    if (r.data) setEncounters(function (e) { return e.map(function (x) { return x.id === optimistic.id ? Object.assign({}, entry, { id: r.data.id }) : x; }); });
-  }, [userId, vaultKey]);
+    const r = await withRetry(function () {
+      return sb.from("encounters_enc").insert({ user_id: userId, ct: enc2.ct, iv: enc2.iv }).select().single();
+    });
+    if (r.data) {
+      setEncounters(function (e) { return e.map(function (x) { return x.id === optimistic.id ? Object.assign({}, entry, { id: r.data.id }) : x; }); });
+    } else {
+      setEncounters(function (e) { return e.filter(function (x) { return x.id !== optimistic.id; }); });
+      setSyncError("That entry didn't save — check your connection and log it again.");
+    }
+  }, [userId, vaultKey, withRetry]);
 
   const removeEncounter = useCallback(async function (id) {
+    const wasRemoved = encounters.find(function (x) { return x.id === id; });
     setEncounters(function (e) { return e.filter(function (x) { return x.id !== id; }); });
-    if (String(id).indexOf("temp-") !== 0) await sb.from("encounters_enc").delete().eq("id", id);
-  }, []);
+    if (String(id).indexOf("temp-") === 0) return;
+    const r = await withRetry(function () { return sb.from("encounters_enc").delete().eq("id", id); });
+    if (r.error && wasRemoved) {
+      setEncounters(function (e) { return [wasRemoved].concat(e); });
+      setSyncError("Couldn't delete that entry — check your connection and try again.");
+    }
+  }, [withRetry, encounters]);
 
   if (loading) return React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: C.cream, fontFamily: FONT_BODY } }, React.createElement("div", { style: { color: C.slate, fontSize: 14, fontWeight: 600 } }, "Decrypting…"));
   if (locked) return React.createElement(PinScreen, { title: "Welcome back", sub: "Enter your PIN to continue", error: pinError, onSubmit: function (val) { if (val === settings.pin) { setLocked(false); setPinError(false); } else setPinError(true); } });
@@ -485,6 +541,10 @@ function Dashboard(props) {
         settings.pinEnabled && React.createElement("button", { onClick: function () { setLocked(true); }, style: { width: 42, height: 42, borderRadius: 14, background: "#fff", border: "2px solid " + C.ink, display: "flex", alignItems: "center", justifyContent: "center" } }, React.createElement(Icon, { name: "lock", size: 18, color: C.ink }))),
 
       React.createElement("div", { style: { padding: "0 20px", paddingBottom: NAV_H + 28 } },
+        syncError && React.createElement(Card, { style: { padding: 14, background: C.pinkLight, border: "2.5px solid " + C.pink, boxShadow: "5px 5px 0px " + C.pink, marginBottom: 20, display: "flex", alignItems: "center", gap: 10 } },
+          React.createElement(Icon, { name: "alert-triangle", size: 18, color: C.pink }),
+          React.createElement("div", { style: { fontSize: 12.5, color: C.ink, fontWeight: 700, flex: 1 } }, syncError),
+          React.createElement("button", { onClick: function () { setSyncError(""); }, style: { background: "none", border: "none", padding: 4 } }, React.createElement(Icon, { name: "x", size: 16, color: C.ink }))),
         tab === "home" && React.createElement(React.Fragment, null,
           React.createElement(PepBanners, null),
           React.createElement(Card, { style: { padding: 28, textAlign: "center", marginBottom: 20, background: "linear-gradient(160deg, #fff 0%, " + meta.bg + " 100%)" } },
@@ -687,7 +747,7 @@ function App() {
     } catch (e) { setVaultError("bad"); } finally { setVaultBusy(false); }
   };
 
-  if (session === undefined || (session && vaultStage === "checking")) return React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "linear-gradient(165deg, " + C.sun + " 0%, " + C.blush + " 45%, " + C.cream + " 100%)" } }, React.createElement("div", { style: { color: C.slate, fontSize: 14, fontWeight: 700 } }, "Loading…"));
+  if (session === undefined || (session && vaultStage === "checking")) return React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "linear-gradient(150deg, " + C.charcoal + " 0%, " + C.plumDeep + " 55%, " + C.navyDeep + " 100%)" } }, React.createElement("div", { style: { color: C.goldLight, fontSize: 14, fontWeight: 700 } }, "Loading…"));
   if (!session) return React.createElement(AuthScreen, null);
   if (vaultStage === "setup") return React.createElement(VaultSetupScreen, { onCreated: createVault });
   if (vaultStage === "unlock") return React.createElement(VaultUnlockScreen, { onUnlock: unlockVault, error: vaultError, busy: vaultBusy });
