@@ -1,6 +1,6 @@
 // Bump CACHE any time you change index.html/manifest/icons and want every
 // installed copy to pick up the new version on next launch.
-const CACHE = "aurashield-v7";
+const CACHE = "aurashield-v10";
 const ASSETS = [
   "./",
   "./index.html",
