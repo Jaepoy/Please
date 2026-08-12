@@ -348,6 +348,12 @@ function EncounterForm(props) {
   const [prep, setPrep] = useState(true);
   const [doxy, setDoxy] = useState(false);
   const [note, setNote] = useState("");
+  const [showMore, setShowMore] = useState(false);
+  const [pill, setPill] = useState(false);
+  const [patchRing, setPatchRing] = useState(false);
+  const [iud, setIud] = useState(false);
+  const [internalCondom, setInternalCondom] = useState(false);
+  const [pregnancyRisk, setPregnancyRisk] = useState(false);
   function Toggle(p) {
     return React.createElement("button", { onClick: function () { p.set(!p.val); }, style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", minHeight: 54, padding: "0 16px", borderRadius: 16, marginBottom: 8, background: p.val ? C.mintLight : C.cream, border: "2px solid " + (p.val ? C.mint : C.border) } },
       React.createElement("span", { style: { fontSize: 14, fontWeight: 700, color: C.ink } }, p.label),
@@ -362,9 +368,26 @@ function EncounterForm(props) {
     React.createElement(Toggle, { label: "Condom used", val: condom, set: setCondom }),
     React.createElement(Toggle, { label: "PrEP coverage active", val: prep, set: setPrep }),
     React.createElement(Toggle, { label: "DoxyPEP taken after", val: doxy, set: setDoxy }),
+    React.createElement("button", { onClick: function () { setShowMore(!showMore); }, style: { display: "flex", alignItems: "center", gap: 6, width: "100%", background: "none", border: "none", padding: "6px 2px", marginTop: 4, marginBottom: showMore ? 8 : 0 } },
+      React.createElement(Icon, { name: showMore ? "chevron-down" : "chevron-right", size: 15, color: C.slate }),
+      React.createElement("span", { style: { fontSize: 12.5, fontWeight: 700, color: C.slate } }, "Other protection used (optional)")),
+    showMore && React.createElement(React.Fragment, null,
+      React.createElement(Toggle, { label: "Birth control pill", val: pill, set: setPill }),
+      React.createElement(Toggle, { label: "Patch / ring", val: patchRing, set: setPatchRing }),
+      React.createElement(Toggle, { label: "IUD", val: iud, set: setIud }),
+      React.createElement(Toggle, { label: "Internal condom", val: internalCondom, set: setInternalCondom }),
+      React.createElement(Toggle, { label: "Pregnancy risk possible", val: pregnancyRisk, set: setPregnancyRisk })),
     React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: C.slate, marginTop: 8, marginBottom: 6 } }, "NOTE (OPTIONAL)"),
     React.createElement("input", { type: "text", value: note, onChange: function (e) { setNote(e.target.value); }, placeholder: "Private note to self", style: { width: "100%", marginBottom: 16, minHeight: 50, padding: "0 14px", borderRadius: 14, border: "2px solid " + C.border, background: C.cream, color: C.ink, fontSize: 14 } }),
-    React.createElement(PrimaryButton, { onClick: function () { props.onSave({ timestamp: new Date(when).getTime(), condom: condom, prep: prep, doxy: doxy, note: note }); }, style: { background: C.mint } }, "Save entry"));
+    React.createElement(PrimaryButton, {
+      onClick: function () {
+        props.onSave({
+          timestamp: new Date(when).getTime(), condom: condom, prep: prep, doxy: doxy, note: note,
+          pregnancyRisk: pregnancyRisk,
+          contraception: { pill: pill, patchRing: patchRing, iud: iud, internalCondom: internalCondom },
+        });
+      }, style: { background: C.mint }
+    }, "Save entry"));
 }
 
 /* ---------------------------------------------------------
@@ -399,6 +422,35 @@ async function fetchAllEncrypted(userId, key) {
 /* ---------------------------------------------------------
    Dashboard
 --------------------------------------------------------- */
+/* ---------------------------------------------------------
+   Onboarding: primary tracking goals (one-time, gates the PrEP
+   Dosing card on the Log tab for non-PrEP users)
+--------------------------------------------------------- */
+function OnboardingGoalsScreen(props) {
+  const [goals, setGoals] = useState(["prep"]);
+  const options = [
+    { key: "prep", label: "PrEP / PEP dosing" },
+    { key: "contraception", label: "Contraception & pregnancy risk" },
+    { key: "general", label: "General sexual health tracking" },
+  ];
+  function toggle(key) {
+    setGoals(function (g) { return g.indexOf(key) !== -1 ? g.filter(function (x) { return x !== key; }) : g.concat([key]); });
+  }
+  return React.createElement("div", { style: { minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 24px", background: "linear-gradient(150deg, #FFFFFF 0%, " + C.cream + " 100%)", fontFamily: FONT_BODY } },
+    React.createElement("div", { style: { width: "100%", maxWidth: MAX_W } },
+      React.createElement("div", { style: { textAlign: "center", marginBottom: 20 } },
+        React.createElement("div", { style: { fontFamily: FONT_DISPLAY, color: C.ink, fontSize: 22, fontWeight: 700 } }, "What are your primary tracking goals?"),
+        React.createElement("div", { style: { fontSize: 13, color: C.slate, marginTop: 8, fontWeight: 500 } }, "Pick what's relevant — you can change this anytime in Settings.")),
+      React.createElement(Card, { style: { padding: 20 } },
+        options.map(function (o) {
+          const on = goals.indexOf(o.key) !== -1;
+          return React.createElement("button", { key: o.key, onClick: function () { toggle(o.key); }, style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", minHeight: 54, padding: "0 16px", borderRadius: 16, marginBottom: 8, background: on ? C.mintLight : C.cream, border: "2px solid " + (on ? C.mint : C.border) } },
+            React.createElement("span", { style: { fontSize: 14, fontWeight: 700, color: C.ink } }, o.label),
+            React.createElement("span", { style: { width: 26, height: 26, borderRadius: 8, background: on ? C.mint : "#fff", border: "2px solid " + (on ? C.mint : C.border), display: "flex", alignItems: "center", justifyContent: "center" } }, on && React.createElement(Icon, { name: "check", size: 15, color: "#fff" })));
+        }),
+        React.createElement(PrimaryButton, { onClick: function () { props.onSelect(goals.length ? goals : ["general"]); }, disabled: false, style: { background: C.ink, color: "#fff", border: "2.5px solid " + C.ink, marginTop: 8 } }, "Continue"))));
+}
+
 function Dashboard(props) {
   const userId = props.userId, vaultKey = props.vaultKey;
   const [loading, setLoading] = useState(true);
@@ -506,10 +558,19 @@ function Dashboard(props) {
       else { setPinError(true); setTimeout(function () { setPinSetupStage("first"); }, 700); }
     }
   });
+  if (!settings.trackingGoals) return React.createElement(OnboardingGoalsScreen, {
+    onSelect: function (goals) { persistSettings(Object.assign({}, settings, { trackingGoals: goals })); }
+  });
 
   const status = settings.prepMode === "daily" ? dailyStatus(doses) : eventStatus(doses);
   const meta = LEVEL_META[status.level];
   const pepAlerts = encounters.filter(function (e) { return !e.condom && !e.prep && hoursSince(e.timestamp) <= 72; }).sort(function (a, b) { return a.timestamp - b.timestamp; });
+  const ecAlerts = encounters.filter(function (e) {
+    const noBarrierOrHormonal = !e.condom && !(e.contraception && (e.contraception.pill || e.contraception.patchRing || e.contraception.iud));
+    const h = hoursSince(e.timestamp);
+    const withinEcWindow = h >= 0 && h <= 120;
+    return e.pregnancyRisk === true && noBarrierOrHormonal && withinEcWindow;
+  }).sort(function (a, b) { return a.timestamp - b.timestamp; });
   const labInterval = 90;
   const lastLab = settings.lastLabDate;
   const daysSinceLab = lastLab ? Math.floor((Date.now() - lastLab) / DAY) : null;
@@ -530,6 +591,23 @@ function Dashboard(props) {
     });
   }
 
+  function EcBanners() {
+    return ecAlerts.map(function (e) {
+      const h = hoursSince(e.timestamp);
+      const remaining = Math.max(0, Math.round(120 - h));
+      const stillMostEffective = h <= 72;
+      return React.createElement(Card, { key: "ec-" + e.id, style: { padding: 18, background: C.pinkLight, border: "2.5px solid " + C.pink, boxShadow: "5px 5px 0px " + C.pink, marginBottom: 20 } },
+        React.createElement("div", { style: { display: "flex", alignItems: "flex-start", gap: 12 } },
+          React.createElement(Icon, { name: "alert-triangle", size: 24, color: C.pink }),
+          React.createElement("div", null,
+            React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.pink } }, "Emergency contraception window: " + remaining + "h left"),
+            React.createElement("div", { style: { fontSize: 13, color: C.inkSoft, marginTop: 4, lineHeight: 1.5, fontWeight: 500 } },
+              "Encounter on " + fmtDateTime(e.timestamp) + " was logged with possible pregnancy risk and no barrier or hormonal protection. EC is " +
+              (stillMostEffective ? "most effective within 72 hours" : "still worth considering up to 120 hours") +
+              " — Plan B / ella is available at most pharmacies, or contact a clinic."))));
+    });
+  }
+
   return React.createElement("div", { style: { background: C.cream, minHeight: "100vh", fontFamily: FONT_BODY, color: C.ink } },
     React.createElement("div", { style: { maxWidth: MAX_W, margin: "0 auto", minHeight: "100vh", position: "relative" } },
       React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "24px 20px 16px" } },
@@ -547,6 +625,7 @@ function Dashboard(props) {
           React.createElement("button", { onClick: function () { setSyncError(""); }, style: { background: "none", border: "none", padding: 4 } }, React.createElement(Icon, { name: "x", size: 16, color: C.ink }))),
         tab === "home" && React.createElement(React.Fragment, null,
           React.createElement(PepBanners, null),
+          React.createElement(EcBanners, null),
           React.createElement(Card, { style: { padding: 28, textAlign: "center", marginBottom: 20, background: "linear-gradient(160deg, #fff 0%, " + meta.bg + " 100%)" } },
             React.createElement("div", { style: { width: 96, height: 96, borderRadius: "50%", background: meta.color, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px", border: "3px solid " + C.ink, boxShadow: "0 0 0 6px " + meta.bg } },
               React.createElement(Icon, { name: meta.icon, size: 44, color: "#fff", strokeWidth: 2.6 })),
@@ -568,7 +647,7 @@ function Dashboard(props) {
         ),
 
         tab === "log" && React.createElement(React.Fragment, null,
-          React.createElement(Card, { style: { padding: 20, marginBottom: 20 } },
+          (!settings.trackingGoals || settings.trackingGoals.indexOf("prep") !== -1) && React.createElement(Card, { style: { padding: 20, marginBottom: 20 } },
             React.createElement(SectionLabel, null, "PrEP dosing"),
             React.createElement("div", { style: { display: "flex", borderRadius: 16, padding: 4, background: C.cream, border: "2px solid " + C.border, marginBottom: 16 } },
               ["daily", "event"].map(function (m) {
@@ -603,25 +682,76 @@ function Dashboard(props) {
                 return React.createElement("div", { key: e.id, style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 12, background: C.cream, marginBottom: 6 } },
                   React.createElement("div", null,
                     React.createElement("div", { style: { fontSize: 13, fontWeight: 700 } }, fmtDateTime(e.timestamp)),
-                    React.createElement("div", { style: { fontSize: 12, color: C.slateLight, marginTop: 2, fontWeight: 500 } }, [e.condom && "condom", e.prep && "PrEP", e.doxy && "DoxyPEP"].filter(Boolean).join(" · ") || "no protection noted")),
+                    React.createElement("div", { style: { fontSize: 12, color: C.slateLight, marginTop: 2, fontWeight: 500 } }, [
+                      e.condom && "condom", e.prep && "PrEP", e.doxy && "DoxyPEP",
+                      e.contraception && e.contraception.pill && "pill",
+                      e.contraception && e.contraception.patchRing && "patch/ring",
+                      e.contraception && e.contraception.iud && "IUD",
+                      e.contraception && e.contraception.internalCondom && "internal condom",
+                    ].filter(Boolean).join(" · ") || "no protection noted")),
                   React.createElement("button", { onClick: function () { removeEncounter(e.id); }, style: { background: "none", border: "none", padding: 8 } }, React.createElement(Icon, { name: "trash", size: 15, color: C.slateLight })));
               }))),
         ),
 
-        tab === "screening" && React.createElement(Card, { style: { padding: 20 } },
-          React.createElement(SectionLabel, null, "STI & HIV screening"),
-          lastLab ? React.createElement(React.Fragment, null,
-            React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 } },
-              React.createElement("span", { style: { fontSize: 15, fontWeight: 700 } }, labOverdue ? "Screening overdue" : daysRemaining + " days until next test"),
-              React.createElement(Icon, { name: "droplet", size: 18, color: labOverdue ? C.pink : C.mint })),
-            React.createElement("div", { style: { width: "100%", height: 12, borderRadius: 999, background: C.cream, overflow: "hidden", marginBottom: 8, border: "2px solid " + C.ink } },
-              React.createElement("div", { style: { width: labProgress + "%", height: "100%", background: labOverdue ? C.pink : C.mint } })),
-            React.createElement("div", { style: { fontSize: 12, color: C.slateLight, marginBottom: 18, fontWeight: 500 } }, "Last test: " + fmtDate(lastLab) + " · every 3 months is typical"))
-            : React.createElement("div", { style: { fontSize: 13, color: C.slateLight, marginBottom: 18, lineHeight: 1.5, fontWeight: 500 } }, "Log your last screening date to start tracking your 3-month reminder."),
-          React.createElement(GhostButton, { onClick: function () { persistSettings(Object.assign({}, settings, { lastLabDate: Date.now() })); } },
-            React.createElement("span", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 8 } }, React.createElement(Icon, { name: "calendar-clock", size: 18, color: C.ink }), "Log test completed today"))),
+        tab === "screening" && React.createElement(React.Fragment, null,
+          React.createElement(Card, { style: { padding: 20, marginBottom: 20 } },
+            React.createElement(SectionLabel, null, "STI & HIV screening"),
+            lastLab ? React.createElement(React.Fragment, null,
+              React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 } },
+                React.createElement("span", { style: { fontSize: 15, fontWeight: 700 } }, labOverdue ? "Screening overdue" : daysRemaining + " days until next test"),
+                React.createElement(Icon, { name: "droplet", size: 18, color: labOverdue ? C.pink : C.mint })),
+              React.createElement("div", { style: { width: "100%", height: 12, borderRadius: 999, background: C.cream, overflow: "hidden", marginBottom: 8, border: "2px solid " + C.ink } },
+                React.createElement("div", { style: { width: labProgress + "%", height: "100%", background: labOverdue ? C.pink : C.mint } })),
+              React.createElement("div", { style: { fontSize: 12, color: C.slateLight, marginBottom: 18, fontWeight: 500 } }, "Last test: " + fmtDate(lastLab) + " · every 3 months is typical"))
+              : React.createElement("div", { style: { fontSize: 13, color: C.slateLight, marginBottom: 18, lineHeight: 1.5, fontWeight: 500 } }, "Log your last screening date to start tracking your 3-month reminder."),
+            React.createElement(GhostButton, { onClick: function () { persistSettings(Object.assign({}, settings, { lastLabDate: Date.now() })); } },
+              React.createElement("span", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 8 } }, React.createElement(Icon, { name: "calendar-clock", size: 18, color: C.ink }), "Log test completed today"))),
+          React.createElement(Card, { style: { padding: 20 } },
+            React.createElement(SectionLabel, null, "Individual markers (optional)"),
+            React.createElement("div", { style: { fontSize: 12.5, color: C.slateLight, marginBottom: 16, fontWeight: 500, lineHeight: 1.5 } }, "Track specific tests separately from your overall panel above."),
+            [
+              { key: "chlamydia", label: "Chlamydia" },
+              { key: "gonorrhea", label: "Gonorrhea" },
+              { key: "syphilis", label: "Syphilis" },
+              { key: "hpv", label: "HPV" },
+            ].map(function (m) {
+              const markers = settings.markers || {};
+              const marker = markers[m.key] || { enabled: false, lastTestedDate: null };
+              const setMarker = function (next) {
+                persistSettings(Object.assign({}, settings, { markers: Object.assign({}, markers, { [m.key]: next }) }));
+              };
+              return React.createElement("div", { key: m.key, style: { borderBottom: "1px solid " + C.border, paddingBottom: 12, marginBottom: 12 } },
+                React.createElement("button", { onClick: function () { setMarker(Object.assign({}, marker, { enabled: !marker.enabled })); }, style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0 } },
+                  React.createElement("span", { style: { fontSize: 14, fontWeight: 700, color: C.ink } }, m.label),
+                  React.createElement("span", { style: { width: 26, height: 26, borderRadius: 8, background: marker.enabled ? C.mint : "#fff", border: "2px solid " + (marker.enabled ? C.mint : C.border), display: "flex", alignItems: "center", justifyContent: "center" } }, marker.enabled && React.createElement(Icon, { name: "check", size: 15, color: "#fff" }))),
+                marker.enabled && React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 } },
+                  React.createElement("span", { style: { fontSize: 12, color: C.slateLight, fontWeight: 500 } }, "Last tested: " + (marker.lastTestedDate ? fmtDate(marker.lastTestedDate) : "—")),
+                  React.createElement("button", { onClick: function () { setMarker(Object.assign({}, marker, { lastTestedDate: Date.now() })); }, style: { fontSize: 12, fontWeight: 800, color: C.violetDeep, background: "none", border: "none" } }, "Log tested today")));
+            })))
+          ,
 
         tab === "settings" && React.createElement(React.Fragment, null,
+          React.createElement(Card, { style: { padding: 20, marginBottom: 20 } },
+            React.createElement(SectionLabel, null, "Tracking goals"),
+            React.createElement("div", { style: { fontSize: 12.5, color: C.slateLight, marginBottom: 14, fontWeight: 500, lineHeight: 1.5 } }, "Controls which cards show up on your Log tab."),
+            [
+              { key: "prep", label: "PrEP / PEP dosing" },
+              { key: "contraception", label: "Contraception & pregnancy risk" },
+              { key: "general", label: "General sexual health tracking" },
+            ].map(function (o) {
+              const goals = settings.trackingGoals || ["prep"];
+              const on = goals.indexOf(o.key) !== -1;
+              return React.createElement("button", {
+                key: o.key,
+                onClick: function () {
+                  const next = on ? goals.filter(function (x) { return x !== o.key; }) : goals.concat([o.key]);
+                  persistSettings(Object.assign({}, settings, { trackingGoals: next.length ? next : ["general"] }));
+                },
+                style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", minHeight: 50, padding: "0 16px", borderRadius: 14, marginBottom: 8, background: on ? C.mintLight : C.cream, border: "2px solid " + (on ? C.mint : C.border) }
+              },
+                React.createElement("span", { style: { fontSize: 13.5, fontWeight: 700, color: C.ink } }, o.label),
+                React.createElement("span", { style: { width: 24, height: 24, borderRadius: 7, background: on ? C.mint : "#fff", border: "2px solid " + (on ? C.mint : C.border), display: "flex", alignItems: "center", justifyContent: "center" } }, on && React.createElement(Icon, { name: "check", size: 14, color: "#fff" })));
+            })),
           React.createElement(Card, { style: { padding: 20, marginBottom: 20 } },
             React.createElement(SectionLabel, null, "Encryption"),
             React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 } },
